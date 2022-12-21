@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<div id="my_dataviz"></div>
+
+
+<script>
+
+var margin = {top: 10, right: 30, bottom: 100, left: 100},
+    width = 920 - margin.left - margin.right,
+    height = 650 - margin.top - margin.bottom;
+
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("./data.csv", function(data) {
+
+  var sumstat = d3.nest() 
+    .key(function(d) { return d.category;})
+    .entries(data);
+
+  var x = d3.scaleLinear()
+    .domain(d3.extent(data, function(d) { return d.year; }))
+    .range([ 0, width-220]);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x).ticks(5));
+
+  var y = d3.scaleLinear()
+    .domain([0, d3.max(data, function(d) { return +d.number; })])
+    .range([ height, 0 ]);
+  svg.append("g")
+    .call(d3.axisLeft(y));
+
+  //X-Label
+  svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width/2)
+    .attr("y", height + margin.top + 30)
+    .text("Year");
+
+  //Y-Label
+  svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -margin.left+40)
+    .attr("x", -margin.top-150)
+    .text("Number of Accidents")
+
+  //Legends
+  svg.append("circle").attr("cx",600).attr("cy",100).attr("r", 6).style("fill", "#f781bf")
+  svg.append("circle").attr("cx",600).attr("cy",130).attr("r", 6).style("fill", "#377eb8")
+  svg.append("circle").attr("cx",600).attr("cy",160).attr("r", 6).style("fill", "#4daf4a")
+  svg.append("circle").attr("cx",600).attr("cy",190).attr("r", 6).style("fill", "#984ea3")
+  svg.append("circle").attr("cx",600).attr("cy",220).attr("r", 6).style("fill", "#ff7f00")
+  svg.append("circle").attr("cx",600).attr("cy",250).attr("r", 6).style("fill", "#ffff33")
+  
+  svg.append("text").attr("x", 620).attr("y", 100).text("Two Wheelers").style("font-size", "15px").attr("alignment-baseline","middle")
+  svg.append("text").attr("x", 620).attr("y", 130).text("Auto Rickshaw").style("font-size", "15px").attr("alignment-baseline","middle")
+  svg.append("text").attr("x", 620).attr("y", 160).text("Car").style("font-size", "15px").attr("alignment-baseline","middle")
+  svg.append("text").attr("x", 620).attr("y", 190).text("Bus").style("font-size", "15px").attr("alignment-baseline","middle")
+  svg.append("text").attr("x", 620).attr("y", 220).text("Truck").style("font-size", "15px").attr("alignment-baseline","middle")
+  svg.append("text").attr("x", 620).attr("y", 250).text("Tractor").style("font-size", "15px").attr("alignment-baseline","middle")
+
+  //Color Codes
+  var res = sumstat.map(function(d){ return d.key }) // list of group names
+  var color = d3.scaleOrdinal()
+    .domain(res)
+    .range(['#f781bf','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#e41a1c','#999999'])
+
+  svg.selectAll(".line")
+      .data(sumstat)
+      .enter()
+      .append("path")
+        .attr("fill", "none")
+        .attr("stroke", function(d){ return color(d.key) })
+        .attr("stroke-width", 2)
+        .attr("d", function(d){
+          return d3.line()
+            .x(function(d) { return x(d.year); })
+            .y(function(d) { return y(+d.number); })
+            (d.values)
+        })
+
+})
+
+</script>
